@@ -3,8 +3,13 @@ for i in `echo graphics/$1-[0-9]*.eps | sed -e 's/\.eps//g'`; do
    convert graphics/$i.eps graphics/$i.png
 done
 
+for i in `echo graphics/$1-[0-9]*.pdf | sed -e 's/\.pdf//g'`; do
+   convert graphics/$i.pdf graphics/$i.png
+done
+
+
 SECTION_ID=$2
-sed -e "s/###ID###/$SECTION_ID/" template_header.html > $1.html
+sed -e "s/###ID###/$SECTION_ID/" templates/template_header.html > $1.html
 echo "<style type='text/css'>.body{font-size:12px;}</style>" >> $1.html
 
 sed -e 's/\\begin{Sinput}/ { \\color{red} \\begin{verbatim}/
@@ -23,4 +28,4 @@ sed -e 's/\\begin{Sinput}/ { \\color{red} \\begin{verbatim}/
         s/\\vspace{[^}]*}//' $1.tex | tth -a -u -e2 -L$1 -r | sed -e 's/src="graphics\/fig_maplot_normalize.png"/src="graphics\/fig_maplot_normalize.png" width="80%"/' | sed -e 's/src="graphics\/fig_maplot_noisemodel.png"/src="graphics\/fig_maplot_noisemodel.png" width="80%"/' >> $1.html
 
 
-sed -e "s/###FOOTER###/Last update on `date +%Y-%m-%d`./" template_footer.html >>$1.html
+sed -e "s/###FOOTER###/Last update on `date +%Y-%m-%d`./" templates/template_footer.html >>$1.html

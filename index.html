@@ -9,13 +9,14 @@
 
 <body>
 <div class="logoheader">
-  <b><i>ISOBAR</i></b>&nbsp; ISOBARIC TAG PROTEIN &amp; PTM QUANTITATION
+  <font color="red"><em>isobar</em></font> protein &amp; ptm quantitation package for <small>R</small>
 </div>
 <div class="header">
-<div id="s1" class="section"> <a href="index.html">Home</a></div>
-<div id="s2" class="section"> <a href="isobar.html">Isobar Usage</a></div>
-<div id="s3" class="section"> <a href="isobar-ptm.html">PTM quantitation</a></div>
-<div id="s4" class="section"> <a href="references.html">References</a></div>
+<div id="s1" class="section"> <a href="index.html">home</a></div>
+<div id="s2" class="section"> <a href="isobar.html">package usage</a></div>
+<div id="s3" class="section"> <a href="isobar-ptm.html"><small>PTM</small> quantitation</a></div>
+<div id="s4" class="section"> <a href="references.html">references</a></div>
+<div align="right"><img src="bioconductor_logo_b.png"/></div>
 </div>
 
 <script language='javascript'>
@@ -24,10 +25,12 @@ document.getElementById("s1").setAttribute("class", "selected section");
 
 <div class="body">
 
-<p><i>isobar</i> is a package for the <a href="http://www.r-project.org/">R</a> statistical computing language and part of <a href="http://www.bioconductor.org/">Bioconductor</a>. It provides methods for preprocessing, normalization, and report generation for the analysis of quantitative mass spectrometry proteomics data tagged with isobaric labels, such as iTRAQ and TMT. </p>
+<p><i>isobar</i> is a package for the <a href="http://www.r-project.org/">R</a> statistical computing language and part of <a href="http://www.bioconductor.org/packages/release/bioc/html/isobar.html">Bioconductor</a>. It provides methods for preprocessing, normalization, and report generation for the analysis of quantitative mass spectrometry proteomics data tagged with isobaric labels, such as iTRAQ and TMT. </p>
 
 <p>The statistical models of <i>isobar</i> are described in <a href="http://pubs.acs.org/doi/pdfplus/10.1021/pr1012784">Florian P. Breitwieser <i>et al.</i>, Journal of Proteome Research 2011</a>.
 </p>
+
+<h3>Download and Installation</h3>
 
 <p>This project is continiously developed. The stable version on <a href="http://bioconductor.org/packages/release/bioc/html/isobar.html">Bioconductor</a> can be installed by starting R and entering:
 <pre>
@@ -37,8 +40,8 @@ document.getElementById("s1").setAttribute("class", "selected section");
 
 The development version on <a href="https://github.com/fbreitwieser/isobar">GitHub</a> can be installed using the <a href="cran.r-project.org/package=devtools">devtools</a> library:
 <pre>
-library(devtools)
-install_github("isobar","fbreitwieser",branch="devel") 
+    library(devtools)
+    install_github("isobar","fbreitwieser",branch="devel") 
 </pre>
 
 </p>
