@@ -1,0 +1,52 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<title>isobar R package for isobaric protein quantitiation</title>
+
+<!--<link rel="stylesheet" type="text/css" href="http://www.cemm.oeaw.ac.at/fileadmin/cemm/templates/css/common.css" media="screen" />-->
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+
+<body>
+<div class="logoheader">
+  <b><i>ISOBAR</i></b>&nbsp; ISOBARIC TAG PROTEIN &amp; PTM QUANTITATION
+</div>
+<div class="header">
+<div id="s1" class="section"> <a href="index.html">Home</a></div>
+<div id="s2" class="section"> <a href="isobar.html">Isobar Usage</a></div>
+<div id="s3" class="section"> <a href="isobar-ptm.html">PTM quantitation</a></div>
+<div id="s4" class="section"> <a href="references.html">References</a></div>
+</div>
+
+<script language='javascript'>
+document.getElementById("s1").setAttribute("class", "selected section");
+</script>
+
+<div class="body">
+
+<p><i>isobar</i> is a package for the <a href="http://www.r-project.org/">R</a> statistical computing language and part of <a href="http://www.bioconductor.org/">Bioconductor</a>. It provides methods for preprocessing, normalization, and report generation for the analysis of quantitative mass spectrometry proteomics data tagged with isobaric labels, such as iTRAQ and TMT. </p>
+
+<p>The statistical models of <i>isobar</i> are described in <a href="http://pubs.acs.org/doi/pdfplus/10.1021/pr1012784">Florian P. Breitwieser <i>et al.</i>, Journal of Proteome Research 2011</a>.
+</p>
+
+<p>This project is continiously developed. The stable version on <a href="http://bioconductor.org/packages/release/bioc/html/isobar.html">Bioconductor</a> can be installed by starting R and entering:
+<pre>
+    source("http://bioconductor.org/biocLite.R")
+    biocLite("isobar")
+</pre>
+
+The development version on <a href="https://github.com/fbreitwieser/isobar">GitHub</a> can be installed using the <a href="cran.r-project.org/package=devtools">devtools</a> library:
+<pre>
+library(devtools)
+install_github("isobar","fbreitwieser",branch="devel") 
+</pre>
+
+</p>
+</div>
+
+<br/>
+<small>Copyright &copy; 2012 Florian Breitwieser, <a href="http://www.cemm.oeaw.ac.at">Ce-M-M-</a>. Last update on 2013-01-04.</small>
+
+</body>
+
+</html>

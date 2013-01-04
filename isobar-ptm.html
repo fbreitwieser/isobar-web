@@ -1,0 +1,543 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<title>isobar R package for isobaric protein quantitiation</title>
+
+<!--<link rel="stylesheet" type="text/css" href="http://www.cemm.oeaw.ac.at/fileadmin/cemm/templates/css/common.css" media="screen" />-->
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+
+<body>
+<div class="logoheader">
+  <b><i>ISOBAR</i></b>&nbsp; ISOBARIC TAG PROTEIN &amp; PTM QUANTITATION
+</div>
+<div class="header">
+<div id="s1" class="section"> <a href="index.html">Home</a></div>
+<div id="s2" class="section"> <a href="isobar.html">Isobar Usage</a></div>
+<div id="s3" class="section"> <a href="isobar-ptm.html">PTM quantitation</a></div>
+<div id="s4" class="section"> <a href="references.html">References</a></div>
+</div>
+
+<script language='javascript'>
+document.getElementById("s3").setAttribute("class", "selected section");
+</script>
+
+<div class="body">
+
+<style type='text/css'>.body{font-size:12px;}</style>
+
+
+
+
+
+
+ 
+
+
+
+<div class="p"><!----></div>
+
+
+
+
+<title>\isobar{} for quantification of PTM datasets</title>
+    
+<h1 align="center"><em>isobar</em> for quantification of PTM datasets </h1>
+
+<h3 align="center">Florian P.&nbsp;Breitwieser, Jacques Colinge </h3>
+
+<div class="p"><!----></div>
+  
+<h1>Contents </h1><a href="#tth_sEc1"
+>1&nbsp; Introduction</a><br />
+<a href="#tth_sEc2"
+>2&nbsp; Modification Site Localization</a><br />
+
+
+
+<a href="#tth_sEc3"
+>3&nbsp; Peptide Ratio Calculation</a><br />
+
+<a href="#tth_sEc4"
+>4&nbsp; Harvesting public PTM databases</a><br />
+
+
+<div class="p"><!----></div>
+ <a id="tth_sEc1"></a><h2>
+1&nbsp;&nbsp;Introduction</h2>
+<em>isobar</em> [<a href="#Breitwieser_Colinge2011-JPR" id="CITEBreitwieser_Colinge2011-JPR">1</a>] version 2 includes
+modules to facilitate PTM quantification. This vignette describes its
+parts, and how to use it to generate quantification reports.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;&nbsp;&nbsp;library(isobar)&nbsp;##&nbsp;load&nbsp;the&nbsp;isobar&nbsp;package
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+Using <em>isobar</em>, automatic report generation is straight-forward
+given proper input files using the script <tt>report/create_reports.R</tt>.
+When called, it parses the globabl properties file <tt>report/properties.R</tt>
+and then the <tt>properties.R</tt> in the current directory. Below is a small 
+example <tt>properties.R</tt> for creating a PDF Quality Control and XLSX 
+analysis report:
+
+<div class="p"><!----></div>
+
+<pre>
+type="iTRAQ4plexSpectra"
+##&nbsp;peaklist&nbsp;files&nbsp;for&nbsp;quantitation,&nbsp;by&nbsp;default&nbsp;all&nbsp;mgf&nbsp;file&nbsp;in&nbsp;directory
+peaklist=list.files(pattern="*\\.mgf$")
+
+##&nbsp;id&nbsp;files,&nbsp;by&nbsp;default&nbsp;all&nbsp;id.csv&nbsp;files&nbsp;in&nbsp;directory
+identifications=list.files(pattern="*\\.id.csv$")
+
+modif="PHOS"&nbsp;#&nbsp;modification&nbsp;to&nbsp;track&nbsp;(eg&nbsp;PHOS,&nbsp;ACET,&nbsp;MET)
+ptm.info.f&nbsp;&lt;-&nbsp;getPtmInfoFromNextprot
+spreadsheet.format="xlsx"
+
+</pre>
+
+<div class="p"><!----></div>
+Reports will be generated calling <tt>path_to_isobar/report/create_reports.R -peptide</tt> from the directory containing the peaklists, identifications and <tt>properties.R</tt>.
+
+<div class="p"><!----></div>
+ <a id="tth_sEc2"></a><h2>
+2&nbsp;&nbsp;Modification Site Localization</h2>
+<em>isobar</em> supports PhosphoRS [<a href="#Taus_Mechtler2011-JPR" id="CITETaus_Mechtler2011-JPR">5</a>] and Delta
+Score [<a href="#Savitski_Kuster2011-MCP" id="CITESavitski_Kuster2011-MCP">4</a>] for modification site localization.
+
+<div class="p"><!----></div>
+
+<b>PhosphoRS integration&nbsp;&nbsp;</b>
+The standalone Java version of PhosphoRS can be downloaded from
+<a href="http://cores.imp.ac.at/uploads/media/PhosphoRS.zip"><tt>http://cores.imp.ac.at/uploads/media/PhosphoRS.zip</tt></a>. It features
+a command line interface to a script which rescores localizations of
+the modification for each peptide-spectrum match. It uses  <span style="font-size:x-small">XML</span>
+files for input and output, which can be generated and parsed by
+<em>isobar</em>. 
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;#&nbsp;Generate&nbsp;PhosphoRS&nbsp;XML&nbsp;input&nbsp;file&nbsp;based&nbsp;on&nbsp;MGF&nbsp;and&nbsp;identification&nbsp;file
+R&#62;&nbsp;#&nbsp;&nbsp;massTolerance:&nbsp;fragment&nbsp;ion&nbsp;mass&nbsp;tolerance&nbsp;(in&nbsp;Da)
+R&#62;&nbsp;#&nbsp;&nbsp;activationType:&nbsp;CID,&nbsp;HCD,&nbsp;or&nbsp;ETD
+R&#62;&nbsp;writePhosphoRSInput("phosphors.in.xml",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"identifications.id.csv","peaklist.mgf",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;massTolerance=0.5,activationType="CID")
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+After calling PhosphoRS (<tt>java -jar phosphoRS.jar phosphors.in.xml phosphors.out.xml</tt>), the resulting  <span style="font-size:x-small">XML</span> file can be read:
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;#&nbsp;Read&nbsp;PhosphoRS&nbsp;XML&nbsp;output&nbsp;file
+R&#62;&nbsp;#&nbsp;&nbsp;&nbsp;simplify:&nbsp;if&nbsp;TRUE,&nbsp;a&nbsp;data.frame&nbsp;is&nbsp;returned,&nbsp;else&nbsp;a&nbsp;list
+R&#62;&nbsp;#&nbsp;&nbsp;&nbsp;besthit.only:&nbsp;if&nbsp;TRUE,&nbsp;only&nbsp;the&nbsp;best&nbsp;localization&nbsp;per&nbsp;spectrum&nbsp;is&nbsp;returned
+R&#62;&nbsp;readPhosphoRSOutput("phosphors.out.xml",simplify=TRUE,besthit.only=TRUE)
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+<tt>getPhosphoRSProbabilities</tt> is a convenience function calling 
+the writer, the script, and the reader in succession. 
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;getPhosphoRSProbabilities("identifications.id.csv","peaklist.mgf",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;massTolerance=0.5,activationType="CID",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;phosphors.cmd="java&nbsp;-jar&nbsp;phosphoRS.jar")
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+
+<b>Delta Score calculation&nbsp;&nbsp;</b>
+The Mascot Delta Score can be calculated directly by the parser
+<tt>mascotParser2.pl</tt> and thresholded (<em>e. g.</em> <tt>-minDeltaScore=10</tt>). For CSV identification files which contain all hits for each spectrum (not just the best one), the function <tt>calc.delta.score</tt> within the R package is provided.
+
+<div class="p"><!----></div>
+
+<b>Using PhosphoRS and Delta Score in Report Generation.&nbsp;&nbsp;</b>
+When generating an IBSpectra object from peaklist and identifications,
+via <tt>readIBSpectra</tt>'s argument <tt>annotate.spectra.f</tt> a
+function can be plugged in to extend or modify the identification
+information. This can be used to calculate scores and filter
+localization scores with <tt>filterSpectraDeltaScore</tt>) or
+<tt>annotateSpectraPhosphoRS</tt>.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;#&nbsp;filterSpectraDeltaScore&nbsp;calls&nbsp;calc.delta.score&nbsp;
+R&#62;&nbsp;#&nbsp;&nbsp;&nbsp;if&nbsp;no&nbsp;column&nbsp;named&nbsp;delta.score&nbsp;is&nbsp;present&nbsp;in&nbsp;the&nbsp;data&nbsp;frame
+R&#62;&nbsp;#&nbsp;identifications&nbsp;below&nbsp;a&nbsp;min.delta.score&nbsp;are&nbsp;REMOVED
+R&#62;&nbsp;ib&nbsp;&lt;-&nbsp;readIBSpectra("identifications.id.csv","peaklist.mgf",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;annotate.spectra.f=function(...)&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;filterSpectraDeltaScore(...,min.delta.score=10))
+R&#62;&nbsp;#&nbsp;filterSpectraPhosphoRS&nbsp;calls&nbsp;PhosphoRS&nbsp;to&nbsp;caluclate&nbsp;PhosphoRS&nbsp;probabilities
+R&#62;&nbsp;#&nbsp;identifications&nbsp;below&nbsp;a&nbsp;min.prob&nbsp;(PhosphoRS&nbsp;peptide&nbsp;isoform&nbsp;probability)&nbsp;
+R&#62;&nbsp;#&nbsp;are&nbsp;marked&nbsp;to&nbsp;be&nbsp;NOT&nbsp;QUANTIFIED&nbsp;(use.for.quant=FALSE),&nbsp;but&nbsp;not&nbsp;removed
+R&#62;&nbsp;ib&nbsp;&lt;-&nbsp;readIBSpectra("identifications.id.csv","peaklist.mgf",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;annotate.spectra.f=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;function(...)&nbsp;filterSpectraPhosphoRS(...,min.prob=0.9,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;phosphors.cmd="java&nbsp;-jar&nbsp;PhosphoRS.jar"))
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+This can be used in report generation, too, where the
+<tt>readIBSpectra.args</tt> can be set accordingly in the report
+properties file <tt>properties.R</tt>:
+
+<div class="p"><!----></div>
+
+<pre>
+readIBSpectra.args&nbsp;=&nbsp;list(annotate.spectra.f=filterSpectraDeltaScore)
+
+</pre>
+or
+
+<pre>
+readIBSpectra.args&nbsp;=&nbsp;list(annotate.spectra.f=filterSpectraPhosphoRS)
+
+</pre>
+
+<div class="p"><!----></div>
+ <a id="tth_sEc3"></a><h2>
+3&nbsp;&nbsp;Peptide Ratio Calculation</h2>
+
+<div class="p"><!----></div>
+All functions which are available to calculate ratios on protein level
+can also be used for peptides. The same noise model is appropriate for
+both.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;data(ib_phospho)
+R&#62;&nbsp;data(noise.model.hcd)
+R&#62;&nbsp;head(proteinGroup(ib_phospho)@peptideInfo)
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;protein&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;peptide&nbsp;start.pos
+2072&nbsp;A1L390-1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SPLSPTETFSWPDVR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1037
+2074&nbsp;A1L390-2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SPLSPTETFSWPDVR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;570
+2076&nbsp;A1L390-3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SPLSPTETFSWPDVR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;981
+1299&nbsp;&nbsp;&nbsp;A6NKT7&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LLLDLPLQTPHK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1170
+783&nbsp;&nbsp;&nbsp;&nbsp;O00264&nbsp;GDQPAASGDSDDDEPPPLPR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;48
+2045&nbsp;O14497-1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SPFLHSGMK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1604
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;modif
+2072&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iTRAQ4plex_Nterm:PHOS:::PHOS::::::::::::
+2074&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iTRAQ4plex_Nterm:PHOS:::PHOS::::::::::::
+2076&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iTRAQ4plex_Nterm:PHOS:::PHOS::::::::::::
+1299&nbsp;iTRAQ4plex_Nterm:::::::::PHOS:::iTRAQ4plex_K:
+783&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iTRAQ4plex_Nterm:::::::PHOS::::::::::::::
+2045&nbsp;&nbsp;&nbsp;&nbsp;iTRAQ4plex_Nterm::::::PHOS:::iTRAQ4plex_K:
+&nbsp;
+</pre> </span>
+  <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;10^estimateRatio(ib_phospho,noise.model.hcd,peptide="SPLSPTETFSWPDVR")
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;114&nbsp;&nbsp;&nbsp;&nbsp;115&nbsp;&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;117
+114&nbsp;1.0000&nbsp;0.3089&nbsp;1.4355&nbsp;1.642
+115&nbsp;3.2376&nbsp;1.0000&nbsp;4.6498&nbsp;5.319
+116&nbsp;0.6966&nbsp;0.2151&nbsp;1.0000&nbsp;1.144
+117&nbsp;0.6091&nbsp;0.1880&nbsp;0.8742&nbsp;1.000
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+By giving a matrix to <tt>estimateRatio</tt>, we can calculate ratios for peptides with specific modifications:
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;pep.n.modif&nbsp;&lt;-&nbsp;unique(apply(fData(ib_phospho)[,c("peptide","modif")],2,cbind))
+R&#62;&nbsp;print(head(pep.n.modif))
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;peptide&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[1,]&nbsp;"AAATPESQEPQAK"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[2,]&nbsp;"AAEAGGAEEQYGFLTTPTK"
+[3,]&nbsp;"AAEEQGDDQDSEK"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[4,]&nbsp;"AAPPPGSPAK"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[5,]&nbsp;"AAVGQESPGGLEAGNAK"&nbsp;&nbsp;
+[6,]&nbsp;"AAVLSDSEDEEK"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;modif&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[1,]&nbsp;"iTRAQ4plex_Nterm:::::::PHOS::::::iTRAQ4plex_K:"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[2,]&nbsp;"iTRAQ4plex_Nterm:::::::::::PHOS::::::::iTRAQ4plex_K:"
+[3,]&nbsp;"iTRAQ4plex_Nterm:::::::::::PHOS::iTRAQ4plex_K:"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[4,]&nbsp;"iTRAQ4plex_Nterm:::::::PHOS:::iTRAQ4plex_K:"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[5,]&nbsp;"iTRAQ4plex_Nterm:::::::PHOS::::::::::iTRAQ4plex_K:"&nbsp;&nbsp;
+[6,]&nbsp;"iTRAQ4plex_Nterm:::::PHOS::PHOS:::::iTRAQ4plex_K:"&nbsp;&nbsp;&nbsp;
+&nbsp;
+</pre> </span>
+  <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;estimateRatio(ib_phospho,noise.model.hcd,channel1="114",channel2="115",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;peptide=head(pep.n.modif),combine=FALSE)[,c("lratio","variance",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"n.spectra","p.value.rat")]
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lratio&nbsp;variance&nbsp;n.spectra&nbsp;p.value.rat
+[1,]&nbsp;-0.6978&nbsp;&nbsp;0.01034&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;3.394e-12
+[2,]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NaN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Inf&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NaN
+[3,]&nbsp;&nbsp;0.1388&nbsp;&nbsp;0.01053&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;8.800e-02
+[4,]&nbsp;-1.0794&nbsp;&nbsp;0.04167&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;6.197e-08
+[5,]&nbsp;-0.9656&nbsp;&nbsp;0.02407&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;2.420e-10
+[6,]&nbsp;-0.2164&nbsp;&nbsp;0.08306&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;7&nbsp;&nbsp;&nbsp;2.264e-01
+&nbsp;
+</pre> </span>
+  <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+A ratio distribution can be calculated based on peptide ratios:
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;suppressPackageStartupMessages(library(distr))
+R&#62;&nbsp;suppressPackageStartupMessages(library(ggplot2))
+R&#62;&nbsp;peptide.ratios&nbsp;&lt;-&nbsp;peptideRatios(ib_phospho,noise.model=noise.model.hcd,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;combn=matrix(c("114","116"),ncol=1))
+R&#62;&nbsp;lim&nbsp;&lt;-&nbsp;max(abs(peptide.ratios$lratio),na.rm=TRUE)
+R&#62;&nbsp;peptide.distr.cauchy&nbsp;&lt;-&nbsp;fitCauchy(peptide.ratios$lratio)
+R&#62;&nbsp;pseq&nbsp;&lt;-&nbsp;seq(from=-lim,to=lim,length.out=1000)
+R&#62;&nbsp;ggplot()&nbsp;+&nbsp;
+&nbsp;&nbsp;&nbsp;geom_histogram(aes(x=lratio,y=..density..),data=peptide.ratios,binwidth=0.05,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;color="darkgreen",fill="white")&nbsp;+
+&nbsp;&nbsp;&nbsp;geom_line(aes(x=x,y=y),color="black",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data=data.frame(x=pseq,y=d(peptide.distr.cauchy)(pseq)))
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+<img src="graphics/plot-ratiodistr.png" alt="graphics/plot-ratiodistr.png" />
+
+<div class="p"><!----></div>
+
+<b>Correction with protein ratios.&nbsp;&nbsp;</b>
+The observed change in concentration of modified peptides in one
+condition versus another is integrating two separate modes of
+regulation [<a href="#Wu_Gygi2011-MCP" id="CITEWu_Gygi2011-MCP">6</a>]:
+
+<div class="p"><!----></div>
+
+<ol type="1">
+<li> Protein expression change
+<div class="p"><!----></div>
+</li>
+
+<li> Modification state change
+<div class="p"><!----></div>
+</li>
+</ol>
+
+<div class="p"><!----></div>
+In many cases, it thus can be advisable to conduct separate MS
+quantification runs of the peptides enriched for the modification of
+interest, and the global proteome. In the report generation, data from 
+other experiments can be integrated using the property <tt>compare.to.quant</tt> in <tt>properties.R</tt>:
+
+<div class="p"><!----></div>
+
+<pre>
+load("../proteome/quant.tbl.rda")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;load&nbsp;proteome&nbsp;quantification&nbsp;table
+compare.to.quant=list(proteome=quant.tbl)&nbsp;#&nbsp;set&nbsp;property
+rm(quant.tbl)
+
+</pre>
+
+<div class="p"><!----></div>
+Peptide ratios can also be corrected with proteome ratios of a
+separate experiment, when giving as <tt>peptide</tt> argument a
+<tt>matrix</tt> or <tt>data.frame</tt> with columns for 'peptide',
+'modif', and 'correct.ratio'. 'correct.ratio' is a log<sub>10</sub> ratio
+which will be used to adjust the one calculated for the specific
+modified peptide.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;peptides&nbsp;&lt;-&nbsp;pep.n.modif[1:5,]
+R&#62;&nbsp;orig.ratio&nbsp;&lt;-&nbsp;estimateRatio(ib_phospho,noise.model.hcd,channel1="114",channel2="115",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;peptide=peptides,combine=FALSE)[,c("lratio","variance")]
+R&#62;&nbsp;peptides.c&nbsp;&lt;-&nbsp;cbind(peptides,correct.ratio=c(0,-1,1,2,-2))
+R&#62;&nbsp;corr.ratio&nbsp;&lt;-&nbsp;estimateRatio(ib_phospho,noise.model.hcd,channel1="114",channel2="115",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;peptide=peptides.c,combine=FALSE)[,c("lratio","variance")]
+R&#62;&nbsp;data.frame(peptides.c,orig.ratio,corr.ratio)
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;peptide&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;modif
+1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AAATPESQEPQAK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iTRAQ4plex_Nterm:::::::PHOS::::::iTRAQ4plex_K:
+2&nbsp;AAEAGGAEEQYGFLTTPTK&nbsp;iTRAQ4plex_Nterm:::::::::::PHOS::::::::iTRAQ4plex_K:
+3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AAEEQGDDQDSEK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iTRAQ4plex_Nterm:::::::::::PHOS::iTRAQ4plex_K:
+4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AAPPPGSPAK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iTRAQ4plex_Nterm:::::::PHOS:::iTRAQ4plex_K:
+5&nbsp;&nbsp;&nbsp;AAVGQESPGGLEAGNAK&nbsp;&nbsp;&nbsp;iTRAQ4plex_Nterm:::::::PHOS::::::::::iTRAQ4plex_K:
+&nbsp;&nbsp;correct.ratio&nbsp;&nbsp;lratio&nbsp;variance&nbsp;lratio.1&nbsp;variance.1
+1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;-0.6978&nbsp;&nbsp;0.01034&nbsp;&nbsp;-0.6978&nbsp;&nbsp;&nbsp;&nbsp;0.01034
+2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NaN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Inf&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NaN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Inf
+3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;0.1388&nbsp;&nbsp;0.01053&nbsp;&nbsp;-0.8612&nbsp;&nbsp;&nbsp;&nbsp;0.01053
+4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;-1.0794&nbsp;&nbsp;0.04167&nbsp;&nbsp;-3.0794&nbsp;&nbsp;&nbsp;&nbsp;0.04167
+5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-2&nbsp;-0.9656&nbsp;&nbsp;0.02407&nbsp;&nbsp;&nbsp;1.0344&nbsp;&nbsp;&nbsp;&nbsp;0.02407
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+As appearent, the variance stays the same also for corrected
+ratios. If a fourth column <tt>variance</tt> of the <tt>peptide</tt>
+argument reports the variance of the correction ratio, it is added to
+the calculated ratio's variance (assuming independence).
+
+<div class="p"><!----></div>
+
+<div class="p"><!----></div>
+ <a id="tth_sEc4"></a><h2>
+4&nbsp;&nbsp;Harvesting public PTM databases</h2>
+neXtProt [<a href="#Lane_Bairoch2012-NAR" id="CITELane_Bairoch2012-NAR">3</a>] and PhosphoSitePlus
+[<a href="#Hornbeck_Sullivan2012-NAR" id="CITEHornbeck_Sullivan2012-NAR">2</a>] provide information on experimentally
+determines post-translational modifications. neXtProt focuses on man,
+and PhosphoSitePlus on man and mouse. Both are manually curated and
+annotate thousands of residues of post-translationally modified
+proteins. 
+
+<div class="p"><!----></div>
+<em>isobar</em> provides functions to gather their information on identified
+proteins.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;ptm.info&nbsp;&lt;-&nbsp;getPtmInfoFromPhosphoSitePlus(proteinGroup(ib_phospho),modif="PHOS")
+R&#62;&nbsp;ptm.info&nbsp;&lt;-&nbsp;getPtmInfoFromNextprot(proteinGroup(ib_phospho))
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;head(ptm.info)
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.id&nbsp;isoform_ac&nbsp;quality&nbsp;&nbsp;&nbsp;description&nbsp;evidence&nbsp;first_position&nbsp;last_position
+1&nbsp;A1L390&nbsp;&nbsp;&nbsp;A1L390-1&nbsp;&nbsp;&nbsp;&nbsp;GOLD&nbsp;Phosphoserine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EXP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;76&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;76
+2&nbsp;A1L390&nbsp;&nbsp;&nbsp;A1L390-1&nbsp;&nbsp;SILVER&nbsp;Phosphoserine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EXP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;433&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;433
+3&nbsp;A1L390&nbsp;&nbsp;&nbsp;A1L390-1&nbsp;&nbsp;&nbsp;&nbsp;GOLD&nbsp;Phosphoserine&nbsp;&nbsp;Curated&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;533&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;533
+4&nbsp;A1L390&nbsp;&nbsp;&nbsp;A1L390-1&nbsp;&nbsp;&nbsp;&nbsp;GOLD&nbsp;Phosphoserine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EXP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;576&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;576
+5&nbsp;A1L390&nbsp;&nbsp;&nbsp;A1L390-1&nbsp;&nbsp;&nbsp;&nbsp;GOLD&nbsp;Phosphoserine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EXP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;577&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;577
+6&nbsp;A1L390&nbsp;&nbsp;&nbsp;A1L390-1&nbsp;&nbsp;SILVER&nbsp;Phosphoserine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EXP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;614&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;614
+&nbsp;&nbsp;modification.name&nbsp;modification.accession&nbsp;position
+1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Phosphoserine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PTM-0253&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;76
+2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Phosphoserine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PTM-0253&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;433
+3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Phosphoserine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PTM-0253&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;533
+4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Phosphoserine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PTM-0253&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;576
+5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Phosphoserine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PTM-0253&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;577
+6&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Phosphoserine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PTM-0253&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;614
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+For reports, the function can be selected via the property <tt>ptm.info.f</tt> in <tt>properties.R</tt>:
+
+<div class="p"><!----></div>
+
+<pre>
+protein.info.f&nbsp;=&nbsp;getPtmInfoFromNextprot
+
+</pre>
+
+<div class="p"><!----></div>
+
+<h2>References</h2>
+
+<dl>
+ <dt><a href="#CITEBreitwieser_Colinge2011-JPR" id="Breitwieser_Colinge2011-JPR">[1]</a></dt><dd>
+F.&nbsp;P. Breitwieser, A.&nbsp;Müller, L.&nbsp;Dayon, T.&nbsp;Köcher, A.&nbsp;Hainard, P.&nbsp;Pichler,
+  U.&nbsp;Schmidt-Erfurth, G.&nbsp;Superti-Furga, J.-C. Sanchez, K.&nbsp;Mechtler, K.&nbsp;L.
+  Bennett, and J.&nbsp;Colinge.
+ General statistical modeling of data from protein relative expression
+  isobaric tags.
+ <em>J Proteome Res</em>, 10(6):2758-2766, Jun 2011.
+
+<div class="p"><!----></div>
+</dd>
+ <dt><a href="#CITEHornbeck_Sullivan2012-NAR" id="Hornbeck_Sullivan2012-NAR">[2]</a></dt><dd>
+P.&nbsp;V. Hornbeck, J.&nbsp;M. Kornhauser, S.&nbsp;Tkachev, B.&nbsp;Zhang, E.&nbsp;Skrzypek, B.&nbsp;Murray,
+  V.&nbsp;Latham, and M.&nbsp;Sullivan.
+ Phosphositeplus: a comprehensive resource for investigating the
+  structure and function of experimentally determined post-translational
+  modifications in man and mouse.
+ <em>Nucleic Acids Res</em>, 40(Database issue):D261-D270, Jan 2012.
+
+<div class="p"><!----></div>
+</dd>
+ <dt><a href="#CITELane_Bairoch2012-NAR" id="Lane_Bairoch2012-NAR">[3]</a></dt><dd>
+L.&nbsp;Lane, G.&nbsp;Argoud-Puy, A.&nbsp;Britan, I.&nbsp;Cusin, P.&nbsp;D. Duek, O.&nbsp;Evalet, A.&nbsp;Gateau,
+  P.&nbsp;Gaudet, A.&nbsp;Gleizes, A.&nbsp;Masselot, C.&nbsp;Zwahlen, and A.&nbsp;Bairoch.
+ nextprot: a knowledge platform for human proteins.
+ <em>Nucleic Acids Res</em>, 40(Database issue):D76-D83, Jan 2012.
+
+<div class="p"><!----></div>
+</dd>
+ <dt><a href="#CITESavitski_Kuster2011-MCP" id="Savitski_Kuster2011-MCP">[4]</a></dt><dd>
+M.&nbsp;M. Savitski, S.&nbsp;Lemeer, M.&nbsp;Boesche, M.&nbsp;Lang, T.&nbsp;Mathieson, M.&nbsp;Bantscheff,
+  and B.&nbsp;Kuster.
+ Confident phosphorylation site localization using the mascot delta
+  score.
+ <em>Mol Cell Proteomics</em>, 10(2):M110.003830, Feb 2011.
+
+<div class="p"><!----></div>
+</dd>
+ <dt><a href="#CITETaus_Mechtler2011-JPR" id="Taus_Mechtler2011-JPR">[5]</a></dt><dd>
+T.&nbsp;Taus, T.&nbsp;Köcher, P.&nbsp;Pichler, C.&nbsp;Paschke, A.&nbsp;Schmidt, C.&nbsp;Henrich, and
+  K.&nbsp;Mechtler.
+ Universal and confident phosphorylation site localization using
+  phosphors.
+ <em>J Proteome Res</em>, Nov 2011.
+
+<div class="p"><!----></div>
+</dd>
+ <dt><a href="#CITEWu_Gygi2011-MCP" id="Wu_Gygi2011-MCP">[6]</a></dt><dd>
+R.&nbsp;Wu, N.&nbsp;Dephoure, W.&nbsp;Haas, E.&nbsp;L. Huttlin, B.&nbsp;Zhai, M.&nbsp;E. Sowa, and S.&nbsp;P.
+  Gygi.
+ Correct interpretation of comprehensive phosphorylation dynamics
+  requires normalization by protein expression changes.
+ <em>Mol Cell Proteomics</em>, 10(8):M111.009654, Aug 2011.</dd>
+</dl>
+
+
+<div class="p"><!----></div>
+</div>
+
+<br/>
+<small>Copyright &copy; 2012 Florian Breitwieser, <a href="http://www.cemm.oeaw.ac.at">Ce-M-M-</a>. Last update on 2013-01-04.</small>
+
+</body>
+
+</html>

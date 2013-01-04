@@ -1,0 +1,1046 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<title>isobar R package for isobaric protein quantitiation</title>
+
+<!--<link rel="stylesheet" type="text/css" href="http://www.cemm.oeaw.ac.at/fileadmin/cemm/templates/css/common.css" media="screen" />-->
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+
+<body>
+<div class="logoheader">
+  <b><i>ISOBAR</i></b>&nbsp; ISOBARIC TAG PROTEIN &amp; PTM QUANTITATION
+</div>
+<div class="header">
+<div id="s1" class="section"> <a href="index.html">Home</a></div>
+<div id="s2" class="section"> <a href="isobar.html">Isobar Usage</a></div>
+<div id="s3" class="section"> <a href="isobar-ptm.html">PTM quantitation</a></div>
+<div id="s4" class="section"> <a href="references.html">References</a></div>
+</div>
+
+<script language='javascript'>
+document.getElementById("s2").setAttribute("class", "selected section");
+</script>
+
+<div class="body">
+
+<style type='text/css'>.body{font-size:12px;}</style>
+
+
+
+
+
+
+ 
+
+
+
+<div class="p"><!----></div>
+
+
+
+
+<div class="p"><!----></div>
+
+<title>Isobar Vignette - iTRAQ and TMT Analysis</title>
+    
+<h1 align="center">Isobar Vignette - iTRAQ and TMT Analysis </h1>
+
+<h3 align="center">Florian P.&nbsp;Breitwieser, Jacques Colinge </h3>
+
+<div class="p"><!----></div>
+  
+<h1>Contents </h1><a href="#tth_sEc1"
+>1&nbsp; Introduction</a><br />
+<a href="#tth_sEc2"
+>2&nbsp; Loading data</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#tth_sEc2.1"
+>2.1&nbsp; <tt>ibspiked</tt> test samples</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#tth_sEc2.2"
+>2.2&nbsp; Protein information and grouping in <tt>ProteinGroup</tt></a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#tth_sEc2.3"
+>2.3&nbsp; <tt>MSnbase</tt> integration</a><br />
+<a href="#tth_sEc3"
+>3&nbsp; Data Analysis</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#tth_sEc3.1"
+>3.1&nbsp; Reporter mass precision</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#tth_sEc3.2"
+>3.2&nbsp; Normalization and isotope impurity correction</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#tth_sEc3.3"
+>3.3&nbsp; Fitting a noise model</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#tth_sEc3.4"
+>3.4&nbsp; Protein and peptide ratio calculation</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#tth_sEc3.5"
+>3.5&nbsp; Protein ratio distribution and selection</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#tth_sEc3.6"
+>3.6&nbsp; Detection of proteins with no specific peptides</a><br />
+<a href="#tth_sEc4"
+>4&nbsp; Report generation</a><br />
+<a href="#tth_sEcA"
+>A&nbsp; File formats</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#tth_sEcA.1"
+>A.1&nbsp; ID CSV file format</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#tth_sEcA.2"
+>A.2&nbsp; IBSpectra CSV file format</a><br />
+<a href="#tth_sEcB"
+>B&nbsp; <tt>properties.R</tt> for report generation</a><br />
+<a href="#tth_sEcC"
+>C&nbsp; Dependencies</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#tth_sEcC.1"
+>C.1&nbsp; <span class="roman">L</span><sup><span class="roman">A</span></sup><span class="roman">T</span><sub><span class="roman">E</span></sub><span class="roman">X</span> and PGF/TikZ</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="#tth_sEcC.2"
+>C.2&nbsp; Perl</a><br />
+<a href="#tth_sEcD"
+>D&nbsp; Session Information</a><br />
+
+
+<div class="p"><!----></div>
+ <a id="tth_sEc1"></a><h2>
+1&nbsp;&nbsp;Introduction</h2>
+The <tt>isobar</tt> package is designed as an extensible and
+interactive environment for data analysis and exploration of data
+produced by Mass Spectrometry analysis of proteins and peptides
+labelled with isobaric tags, such as iTRAQ and TMT.  <tt>isobar</tt>
+implements the theory presented in Breitwieser et al., Journal of
+Proteome Research 2011.
+
+<div class="p"><!----></div>
+<tt>isobar</tt> allows analyzing iTRAQ 4plex and 8plex, and TMT
+2plex and 6plex experiments representing them as <tt>IBSpectra</tt>
+objects. The respective classes are <tt>iTRAQ4plexSpectra</tt>,
+<tt>iTRAQ8plexSpectra</tt>, <tt>TMT2plexSpectra</tt>, and
+<tt>TMT6plexSpectra</tt>.
+
+<div class="p"><!----></div>
+The first thing you need to do is load the package.
+
+<div class="p"><!----></div>
+  <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;&nbsp;&nbsp;library(isobar)&nbsp;##&nbsp;load&nbsp;the&nbsp;isobar&nbsp;package
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+ <a id="tth_sEc2"></a><h2>
+2&nbsp;&nbsp;Loading data</h2>
+<tt>isobar</tt> can read identifications and quantifications from
+tab-separated and MGF files. Perl scripts are supplied to generate a
+tab-separated version from the vendor formats of Mascot and Phenyx,
+see appendix <a href="#sec:dependencies">C</a>. The format is simple and
+described in appendix <a href="#app:fileformats">A</a>. Experimental support for
+the mzIdentML format within R is also available - please contact the
+mantainer in case of problems.
+
+<div class="p"><!----></div>
+
+<dl>
+ <dt><b><span class="small">ID.CSV</b></dt>
+	<dd> tab-separated file containing peptide-spectra matches and
+  spectrum meta-information such as retention time, m/z and charge. 
+  Generated by parser scripts.</span></dd>
+ <dt><b><span class="small">MGF</b></dt>
+	<dd> contains peak lists from which quantitative
+  information on reporter tags are extracted. Must be centroided.</span></dd>
+ <dt><b><span class="small">IBSPECTRA.CSV</b></dt>
+	<dd> tab-separated file containing the same columns as
+  <span class="small">ID.CSV</span> plus <em>quantitative information</em> extracted from <span class="small">MGF</span>
+  file - that means the reporter tag masses and intensities as
+  additional columns.</span></dd>
+</dl>
+
+<div class="p"><!----></div>
+<tt>readIBSpectra</tt> is the primary function to generate a
+<tt>IBSpectra</tt> object. The first argument is one of <span class="small">
+  iTRAQ4plexSpectra</span>, <span class="small">iTRAQ8plexSpectra</span>, <span class="small">
+  TMT2plexSpectra</span> and <span class="small">TMT6plexSpectra</span> and denotes the tag
+type and therefore class. 
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;&nbsp;&nbsp;##&nbsp;generating&nbsp;IBSpectra&nbsp;object&nbsp;from&nbsp;ID.CSV&nbsp;and&nbsp;MGF
+R&#62;&nbsp;&nbsp;&nbsp;ib&nbsp;&lt;-&nbsp;readIBSpectra("iTRAQ4plexSpectra",list.files(pattern=".id.csv"),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list.files(pattern=".mgf"))
+R&#62;&nbsp;&nbsp;&nbsp;##&nbsp;write&nbsp;in&nbsp;tabular&nbsp;IBSPECTRA.CSV&nbsp;format&nbsp;to&nbsp;file
+R&#62;&nbsp;&nbsp;&nbsp;write.table(as.data.frame(ib),sep="\t",row.names=F,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;file="myexperiment.ibspectra.csv")
+R&#62;&nbsp;&nbsp;&nbsp;##&nbsp;generate&nbsp;from&nbsp;saved&nbsp;IBSPECTRA.CSV&nbsp;-&nbsp;MGF&nbsp;does&nbsp;not&nbsp;have&nbsp;to&nbsp;be&nbsp;supplied
+R&#62;&nbsp;&nbsp;&nbsp;ib.2&nbsp;&lt;-&nbsp;readIBSpectra("iTRAQ4plexSpectra","myexperiment.ibspectra.csv")
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+In case the MGF file is very big, it can be advanteguous to generate a
+smaller version containing only meta- and quantitative information
+before import in <tt>R</tt>. On Linux, the tool <tt>grep</tt> is
+readily available.
+
+<div class="p"><!----></div>
+
+<pre>
+egrep&nbsp;'^[A-Z]|^1[12][0-9]\.'&nbsp;BIG.mgf&nbsp;&#62;&nbsp;SMALL.mgf
+
+</pre>
+
+<div class="p"><!----></div>
+     <a id="tth_sEc2.1"></a><h3>
+2.1&nbsp;&nbsp;<tt>ibspiked</tt> test samples</h3>
+The examples presented are based on the dataset
+<tt>ibspiked_set1</tt> which has been designed to test
+<tt>isobar</tt>'s functionality and searched against the Swissprot
+human database with Mascot and Phenyx. <tt>ibspiked_set1</tt> is an
+iTRAQ 4-plex data set comprised of a complex background (albumin- and
+IgG-depleted human plasma) and spiked proteins. MS analysis was
+performed in ThermoFisher Scientific LTQ Orbitrap HCD instrument with
+2D shotgun peptide separation (see original paper for more
+details). The samples used for each iTRAQ channel are as follows:
+
+<ul>
+<li> Depleted human plasma background (&#62;150 protein detected);
+<div class="p"><!----></div>
+</li>
+
+<li> Spiked-in proteins with the following ratios
+  
+<ul>
+<li> <tt>CERU_HUMAN (P00450)</tt> at concentrations 1:1:1:1;
+<div class="p"><!----></div>
+</li>
+
+<li> <tt>CERU_RAT (P13635)</tt> at concentrations 1:2:5:10;
+<div class="p"><!----></div>
+</li>
+
+<li> <tt>CERU_MOUSE (Q61147)</tt> at concentrations 10:5:2:1.
+<div class="p"><!----></div>
+</li>
+</ul>
+<div class="p"><!----></div>
+</li>
+</ul>
+
+<div class="p"><!----></div>
+A second data set with ratios 1:10:50:100 is available as
+<tt>ibspiked_set2</tt> from
+<a href="http://bininformatics.cemm.oeaw.ac.at/isobar"><tt>http://bininformatics.cemm.oeaw.ac.at/isobar</tt></a>.
+
+<div class="p"><!----></div>
+The Ceruplasmins have been selected as the share peptides. Hereafter,
+we load the data pacakage and the ceru protein IDs are identified via
+the <tt>protein.g</tt> function, which provides a mean to retrieve
+data from <tt>ProteinGroup</tt> objects. <tt>ProteinGroup</tt> is a 
+slot of <tt>IBSpectra</tt> objects and contains informations on proteins
+and their grouping. See <a href="#ss:proteingrouping">2.2</a>.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;&nbsp;&nbsp;data(ibspiked_set1)
+R&#62;&nbsp;&nbsp;&nbsp;ceru.human&nbsp;&lt;-&nbsp;protein.g(proteinGroup(ibspiked_set1),"CERU_HUMAN")
+R&#62;&nbsp;&nbsp;&nbsp;ceru.rat&nbsp;&lt;-&nbsp;protein.g(proteinGroup(ibspiked_set1),"CERU_RAT")
+R&#62;&nbsp;&nbsp;&nbsp;ceru.mouse&nbsp;&lt;-&nbsp;protein.g(proteinGroup(ibspiked_set1),"CERU_MOUSE")
+R&#62;&nbsp;&nbsp;&nbsp;ceru.proteins&nbsp;&lt;-&nbsp;c(ceru.human,ceru.rat,ceru.mouse)
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+     <a id="tth_sEc2.2"></a><h3>
+2.2&nbsp;&nbsp;Protein information and grouping in <tt>ProteinGroup</tt></h3>
+<a id="ss:proteingrouping">
+</a>
+When an <tt>ibspectra.csv</tt> is read, protein are grouped to
+identify proteins which have unique peptides. By default, only
+peptides with unique peptides are grouped.
+
+<div class="p"><!----></div>
+The algorithm to infer protein groups works as follows:
+
+<ol type="1">
+<li> Group proteins together which have been seen with exactly the
+  same peptides (<tt>indistinguishableProteins</tt>) - these are 
+  the <tt>protein.g</tt> identifiers.
+<div class="p"><!----></div>
+</li>
+
+<li> Create protein groups (<tt>proteinGroupTable</tt>):
+  
+<ol type="a">
+<li> Define proteins with specific peptides as reporters
+    (<tt>reporterProteins</tt>)
+<div class="p"><!----></div>
+</li>
+
+<li> Get proteins which are contained <a href="#tthFtNtAAB" id="tthFrefAAB"><sup>1</sup></a> by
+    reporterProteins and group them below.
+<div class="p"><!----></div>
+</li>
+</ol>
+<div class="p"><!----></div>
+</li>
+
+<li> Create protein groups for proteins without specific peptides as
+  above.
+<div class="p"><!----></div>
+</li>
+</ol>
+
+<div class="p"><!----></div>
+     <a id="tth_sEc2.3"></a><h3>
+2.3&nbsp;&nbsp;<tt>MSnbase</tt> integration</h3>
+<tt>MSnbase</tt> by Laurent Gatto provides data manipulation and
+processing methods for MS-based proteomics data. It provides import,
+representation and analysis of raw MS data stored in <tt>mzXML</tt>,
+<tt>mzML</tt> and <tt>mzData</tt> using the <tt>mzR</tt> package and
+centroided and un-centroided <span class="small"><tt>MGF</tt></span> peak lists. It
+allows to use and preprocess raw data whereas <tt>isobar</tt>
+requires centroided peak lists. In the future, the <tt>isobar</tt>
+class <tt>IBSpectra</tt> might be based on or replaced by
+<tt>MSnbase</tt>'s class <tt>MSnSet</tt>.  For now, methods for
+coercion are implemented:
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;&nbsp;&nbsp;as(ibspectra,"MSnSet")
+R&#62;&nbsp;&nbsp;&nbsp;as(msnset,"IBSpectra")
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+ <a id="tth_sEc3"></a><h2>
+3&nbsp;&nbsp;Data Analysis</h2>
+
+     <a id="tth_sEc3.1"></a><h3>
+3.1&nbsp;&nbsp;Reporter mass precision</h3>
+The distribution of observed masses from the reporter tags can be used
+to visualize the precision of the MS setup on the fragment level and
+used to set the correct window for isolation.
+
+<div class="p"><!----></div>
+The expected masses of the reporter tags are in the slot
+<tt>reporterTagMasses</tt> of the implementations of the
+<tt>IBSpectra</tt> class. The experimental masses are in the matrix
+<tt>mass</tt> of <tt>AssayData</tt>; they can also be accessed by
+the method <tt>reporterMasses(x)</tt>.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;sprintf("%.4f",reporterTagMasses(ibspiked_set1))&nbsp;&nbsp;##&nbsp;expected&nbsp;masses
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+[1]&nbsp;"114.1112"&nbsp;"115.1083"&nbsp;"116.1116"&nbsp;"117.1150"
+&nbsp;
+</pre> </span>
+  <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;mass&nbsp;&lt;-&nbsp;assayData(ibspiked_set1)[["mass"]]&nbsp;##&nbsp;observerd&nbsp;masses
+R&#62;&nbsp;apply(mass,2,function(x)&nbsp;sprintf("%.4f",quantile(x,na.rm=TRUE,probs=c(0.025,0.975))))
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;114&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;115&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;116&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;117&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[1,]&nbsp;"114.1110"&nbsp;"115.1081"&nbsp;"116.1115"&nbsp;"117.1148"
+[2,]&nbsp;"114.1116"&nbsp;"115.1087"&nbsp;"116.1120"&nbsp;"117.1153"
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+<tt>reporterMassPrecision</tt> provides a plot of the distribution.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;&nbsp;&nbsp;print(reporterMassPrecision(ibspiked_set1))
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+
+<div style="text-align:center">
+<div class="p"><!----></div>
+<a id="tth_fIg1">
+</a> <img src="graphics/plot-print-reporterMasses.png" alt="graphics/plot-print-reporterMasses.png" />
+
+<div style="text-align:center">Figure 1: Reporter mass precision plot.</div>
+<a id="fig:reporterMassPrecision">
+</a>
+
+<div class="p"><!----></div>
+</div>     <a id="tth_sEc3.2"></a><h3>
+3.2&nbsp;&nbsp;Normalization and isotope impurity correction</h3>
+Isotope impurity correction factors are supplied by labelling reagent
+manufacturers. Default values that can be modified by the user are
+available in <tt>isobar</tt> and corrections are obtained by simple
+linear algebra.
+
+<div class="p"><!----></div>
+Due to differences between samples it is advisable to normalize data
+before further processing. By default, <tt>normalize</tt> corrects
+by a factor such that the median intensities in all reporter channels
+are equal.
+
+<div class="p"><!----></div>
+See figure &nbsp;<a href="#fig:normalization">2</a>.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;ib.old&nbsp;&lt;-&nbsp;ibspiked_set1
+R&#62;&nbsp;ibspiked_set1&nbsp;&lt;-&nbsp;correctIsotopeImpurities(ibspiked_set1)
+R&#62;&nbsp;ibspiked_set1&nbsp;&lt;-&nbsp;normalize(ibspiked_set1)
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;par(mfrow=c(1,2))
+R&#62;&nbsp;maplot(ib.old,channel1="114",channel2="117",ylim=c(0.5,2),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;main="before&nbsp;normalization")
+R&#62;&nbsp;abline(h=1,col="red",lwd=2)
+R&#62;&nbsp;maplot(ibspiked_set1,channel1="114",channel2="117",ylim=c(0.5,2),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;main="after&nbsp;normalization")
+R&#62;&nbsp;abline(h=1,col="red",lwd=2)
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+
+<div style="text-align:center">
+<div class="p"><!----></div>
+<a id="tth_fIg2">
+</a> <img src="graphics/fig_maplot_normalize.png" width="80%" alt="graphics/fig_maplot_normalize.png" />
+
+<div style="text-align:center">Figure 2: Ratio versus intensity plots ('MA plots') before and after applying normalization.</div>
+<a id="fig:normalization">
+</a>
+
+<div class="p"><!----></div>
+</div>     <a id="tth_sEc3.3"></a><h3>
+3.3&nbsp;&nbsp;Fitting a noise model</h3>
+A noise model is a approximation of the expected technical variation
+based on signal intensity. It is stable for a certain experimental
+setup and thus can be learned once. Noise is observed directly when
+comparing identical samples in multiple channels (1:1 iTRAQ/TMT
+sample) and we can use <tt>ibspiked_set1</tt> background proteins as
+a 1:1 sample. Therefore we exclude the ceruplasmins before fitting a
+noise model using <tt>NoiseModel</tt>. See figure
+&nbsp;<a href="#fig:maplots">3</a>.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;ib.background&nbsp;&lt;-&nbsp;subsetIBSpectra(ibspiked_set1,protein=ceru.proteins,"exclude")
+R&#62;&nbsp;noise.model&nbsp;&lt;-&nbsp;NoiseModel(ib.background)
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+[1]&nbsp;&nbsp;0.03423&nbsp;12.14500&nbsp;&nbsp;1.43708
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+Though only recommended when sufficient data are available, a method
+exist for the estimation of a noise model without a 1:1 dataset. It
+takes longer time as it first computes all the protein ratios to shift
+spectrum ratios to 1:1. To examplify this procedure, we only take rat
+and mouse CERU proteins from <tt>ibspiked_set1</tt>, see figure
+&nbsp;<a href="#fig:maplots">3</a>. The resultant noise model is a rough approximation
+only because of the very limitted data, see Breitwieser et
+al. Supporting Information, submitted, for a real example.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;ib.ceru&nbsp;&lt;-&nbsp;subsetIBSpectra(ibspiked_set1,protein=ceru.proteins,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;direction="exclude&nbsp;others",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;specificity="reporter-specific")
+R&#62;&nbsp;nm.ceru&nbsp;&lt;-&nbsp;NoiseModel(ib.ceru,one.to.one=FALSE,pool=TRUE)
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+3&nbsp;proteins&nbsp;with&nbsp;more&nbsp;than&nbsp;10&nbsp;spectra,&nbsp;taking&nbsp;top&nbsp;50.
+[1]&nbsp;1.000e-10&nbsp;4.474e-01&nbsp;2.057e-01
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;maplot(ib.background,noise.model=c(noise.model,nm.ceru),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;channel1="114",channel2="115",ylim=c(0.2,5),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;main="95%&nbsp;CI&nbsp;noise&nbsp;model")
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+
+<div style="text-align:center">
+<div class="p"><!----></div>
+<a id="tth_fIg3">
+</a> <img src="graphics/fig_maplot_noisemodel.png" width="80%" alt="graphics/fig_maplot_noisemodel.png" />
+
+<div class="p"><!----></div>
+<div style="text-align:center">Figure 3: Red lines denote the 95 % confidence interval as estimated
+  by the noise model on background proteins. The blue line is
+  estimated as non 1:1 noise model based on only spectra of CERU
+  proteins.</div>
+<a id="fig:maplots">
+</a>
+
+<div class="p"><!----></div>
+</div>     <a id="tth_sEc3.4"></a><h3>
+3.4&nbsp;&nbsp;Protein and peptide ratio calculation</h3>
+<tt>estimateRatio</tt> calculates the relative abundance of a
+peptide or protein in one tag compared to another. It calculates a
+weighted average (after outlier removal) of the spectrum ratios. The
+weights are the inverse of the spectrum ratio variances. It requires a
+<tt>IBSpectra</tt> and <tt>NoiseModel</tt> object and definitions of
+channel1, channel2, and the protein or peptide. The result is
+channel2/channel1.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;##&nbsp;Calculate&nbsp;ratio&nbsp;based&nbsp;on&nbsp;all&nbsp;spectra&nbsp;of&nbsp;peptides&nbsp;specific&nbsp;
+R&#62;&nbsp;##&nbsp;&nbsp;to&nbsp;CERU_HUMAN,&nbsp;CERU_RAT&nbsp;or&nbsp;CERU_MOUSE.&nbsp;Returns&nbsp;a&nbsp;named
+R&#62;&nbsp;##&nbsp;&nbsp;numeric&nbsp;vector.
+R&#62;&nbsp;10^estimateRatio(ibspiked_set1,noise.model,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;channel1="114",channel2="115",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;protein=ceru.proteins)['lratio']
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+lratio&nbsp;
+0.9276&nbsp;
+&nbsp;
+</pre> </span>
+  <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;##&nbsp;If&nbsp;argument&nbsp;'combine=FALSE',&nbsp;estimateRatio&nbsp;returns&nbsp;a&nbsp;data.frame&nbsp;
+R&#62;&nbsp;##&nbsp;&nbsp;with&nbsp;one&nbsp;row&nbsp;per&nbsp;protein
+R&#62;&nbsp;10^estimateRatio(ibspiked_set1,noise.model,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;channel1="114",channel2="115",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;protein=ceru.proteins,combine=FALSE)[,'lratio']
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+P00450&nbsp;P13635&nbsp;Q61147&nbsp;
+1.0447&nbsp;1.8325&nbsp;0.5074&nbsp;
+&nbsp;
+</pre> </span>
+  <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;##&nbsp;spiked&nbsp;material&nbsp;channel&nbsp;115&nbsp;vs&nbsp;114:&nbsp;
+R&#62;&nbsp;##&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CERU_HUMAN&nbsp;(P00450):&nbsp;1:1
+R&#62;&nbsp;##&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CERU_RAT&nbsp;&nbsp;&nbsp;(P13635):&nbsp;2:1&nbsp;&nbsp;=&nbsp;2
+R&#62;&nbsp;##&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CERU_MOUSE&nbsp;(Q61147):&nbsp;5:10&nbsp;=&nbsp;0.5
+R&#62;&nbsp;
+R&#62;&nbsp;##&nbsp;Peptides&nbsp;shared&nbsp;between&nbsp;rat&nbsp;and&nbsp;mouse
+R&#62;&nbsp;pep.shared&nbsp;&lt;-&nbsp;peptides(proteinGroup(ibspiked_set1),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;c(ceru.rat,ceru.mouse),set="intersect",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;columns=c('peptide','n.shared.groups'))
+R&#62;&nbsp;##&nbsp;remove&nbsp;those&nbsp;which&nbsp;are&nbsp;shared&nbsp;with&nbsp;other&nbsp;proteins
+R&#62;&nbsp;pep.shared&nbsp;&lt;-&nbsp;pep.shared$peptide[pep.shared$n.shared.groups==2]
+R&#62;&nbsp;##&nbsp;calculate&nbsp;ratio:&nbsp;it&nbsp;is&nbsp;between&nbsp;the&nbsp;rat&nbsp;and&nbsp;mouse&nbsp;ratios
+R&#62;&nbsp;10^estimateRatio(ibspiked_set1,noise.model,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;channel1="114",channel2="115",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;peptide=pep.shared)['lratio']
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+lratio&nbsp;
+0.6305&nbsp;
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+When examining the global differences and differences in between
+classes, <tt>proteinRatios</tt> can be used. It is also suitable to
+inspect sample variability. The argument <tt>cl</tt> can be used to
+define class labels. If <tt>combn.method='interclass'</tt> or
+<tt>intraclass</tt> and <tt>summarize=TRUE</tt>,
+<tt>proteinRatios</tt> return a single summarized ratio across and
+within classes, resp..
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;protein.ratios&nbsp;&lt;-&nbsp;proteinRatios(ibspiked_set1,noise.model,cl=c("1","0","0","0"))
+R&#62;&nbsp;str(protein.ratios)
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+'data.frame':	966&nbsp;obs.&nbsp;of&nbsp;&nbsp;13&nbsp;variables:
+&nbsp;$&nbsp;lratio&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;num&nbsp;&nbsp;-0.0506&nbsp;-0.0169&nbsp;-0.0163&nbsp;0.0341&nbsp;0.035&nbsp;...
+&nbsp;$&nbsp;variance&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;num&nbsp;&nbsp;0.000979&nbsp;0.000801&nbsp;0.000861&nbsp;0.000785&nbsp;0.000733&nbsp;...
+&nbsp;$&nbsp;n.spectra&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;num&nbsp;&nbsp;177&nbsp;178&nbsp;175&nbsp;175&nbsp;175&nbsp;175&nbsp;5&nbsp;4&nbsp;3&nbsp;6&nbsp;...
+&nbsp;$&nbsp;n.na1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;num&nbsp;&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;...
+&nbsp;$&nbsp;n.na2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;num&nbsp;&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;...
+&nbsp;$&nbsp;p.value.rat&nbsp;&nbsp;&nbsp;:&nbsp;num&nbsp;&nbsp;0.053&nbsp;0.2755&nbsp;0.2888&nbsp;0.1117&nbsp;0.0982&nbsp;...
+&nbsp;$&nbsp;p.value.sample:&nbsp;num&nbsp;&nbsp;NA&nbsp;NA&nbsp;NA&nbsp;NA&nbsp;NA&nbsp;NA&nbsp;NA&nbsp;NA&nbsp;NA&nbsp;NA&nbsp;...
+&nbsp;$&nbsp;is.significant:&nbsp;num&nbsp;&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;0&nbsp;NA&nbsp;NA&nbsp;0&nbsp;...
+&nbsp;$&nbsp;ac&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;chr&nbsp;&nbsp;"136429"&nbsp;"136429"&nbsp;"136429"&nbsp;"136429"&nbsp;...
+&nbsp;$&nbsp;r1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;chr&nbsp;&nbsp;"114"&nbsp;"114"&nbsp;"114"&nbsp;"115"&nbsp;...
+&nbsp;$&nbsp;r2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;chr&nbsp;&nbsp;"115"&nbsp;"116"&nbsp;"117"&nbsp;"116"&nbsp;...
+&nbsp;$&nbsp;class1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;chr&nbsp;&nbsp;"1"&nbsp;"1"&nbsp;"1"&nbsp;"0"&nbsp;...
+&nbsp;$&nbsp;class2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;chr&nbsp;&nbsp;"0"&nbsp;"0"&nbsp;"0"&nbsp;"0"&nbsp;...
+&nbsp;-&nbsp;attr(*,&nbsp;"classLabels")=&nbsp;chr&nbsp;&nbsp;"1"&nbsp;"0"&nbsp;"0"&nbsp;"0"
+&nbsp;-&nbsp;attr(*,&nbsp;"combn.method")=&nbsp;chr&nbsp;"global"
+&nbsp;-&nbsp;attr(*,&nbsp;"symmetry")=&nbsp;logi&nbsp;FALSE
+&nbsp;-&nbsp;attr(*,&nbsp;"sign.level.rat")=&nbsp;num&nbsp;0.05
+&nbsp;-&nbsp;attr(*,&nbsp;"sign.level.sample")=&nbsp;num&nbsp;0.05
+&nbsp;-&nbsp;attr(*,&nbsp;"variance.function")=&nbsp;chr&nbsp;"maxi"
+&nbsp;-&nbsp;attr(*,&nbsp;"combine")=&nbsp;logi&nbsp;FALSE
+&nbsp;-&nbsp;attr(*,&nbsp;"reverse")=&nbsp;logi&nbsp;FALSE
+&nbsp;
+</pre> </span>
+  <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;##&nbsp;defined&nbsp;class&nbsp;114&nbsp;and&nbsp;115&nbsp;as&nbsp;class&nbsp;'T',&nbsp;116&nbsp;and&nbsp;117&nbsp;as&nbsp;class&nbsp;'C'
+R&#62;&nbsp;classLabels(ibspiked_set1)&nbsp;&lt;-&nbsp;c("T","T","C","C")
+R&#62;&nbsp;proteinRatios(ibspiked_set1,noise.model,protein=ceru.proteins,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cl=classLabels(ibspiked_set1),combn.method="interclass",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;summarize=T)[,c("ac","lratio","variance")]
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ac&nbsp;&nbsp;&nbsp;&nbsp;lratio&nbsp;&nbsp;variance
+1&nbsp;P00450&nbsp;&nbsp;0.006784&nbsp;0.0006186
+2&nbsp;P13635&nbsp;&nbsp;0.600243&nbsp;0.0512591
+3&nbsp;Q61147&nbsp;-0.564600&nbsp;0.0466328
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+     <a id="tth_sEc3.5"></a><h3>
+3.5&nbsp;&nbsp;Protein ratio distribution and selection</h3>
+Protein ratio distributions can be calculated ideally on biological
+replicated. To examine differentially expressed proteins, both sample
+variability information (random protein ratios) as a
+<em>fold-change</em> constraint, and ratio <em>precision</em> can be used.
+For a experimental setup with biolgical replicates in the same
+experiment (but different channels), the distribution of biological
+variability can be learned by computing the ratios between the
+replicates. With no replicates available, one has the choice to (a)
+model the actual protein ratios and just select the most extreme
+ratios; (b) learn the distribution from a previous experiment; or (c)
+assume a standard Cauchy distribution with location 0 and scale
+0.1, 0.05, and 0.025, which correspond with &#945; = 0.05
+roughly to fold changes of 4, 2, and 1.5. 
+
+<div class="p"><!----></div>
+A Cauchy distribution fits accurately this type of random protein
+ratio distribution: Cauchy is displayed in red, Gaussian in blue. In
+the case of <tt>ibspiked_set1</tt>, the many 1:1 proteins provide us
+with adequate data to learn the random protein ratio distribution,
+however only of the <i>technical</i> variation.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;#protein.ratios&nbsp;&lt;-&nbsp;proteinRatios(ibspiked_set1,noise.model)
+R&#62;&nbsp;protein.ratiodistr.wn&nbsp;&lt;-&nbsp;fitWeightedNorm(protein.ratios[,'lratio'],
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;weights=1/protein.ratios[,'variance'])
+R&#62;&nbsp;protein.ratiodistr.cauchy&nbsp;&lt;-&nbsp;fitCauchy(protein.ratios[,"lratio"])
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+
+<div style="text-align:center">
+<div class="p"><!----></div>
+<a id="tth_fIg4">
+</a>    <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;library(distr)&nbsp;#&nbsp;required&nbsp;library
+R&#62;&nbsp;limits=seq(from=-0.5,to=0.5,by=0.001)
+R&#62;&nbsp;curve.wn&nbsp;&lt;-&nbsp;data.frame(x=limits,y=d(protein.ratiodistr.wn)(limits))
+R&#62;&nbsp;curve.cauchy&lt;-data.frame(x=limits,y=d(protein.ratiodistr.cauchy)(limits))
+R&#62;&nbsp;g&nbsp;&lt;-&nbsp;ggplot(data.frame(protein.ratios),aes(x=lratio))&nbsp;+
+&nbsp;&nbsp;&nbsp;geom_histogram(colour&nbsp;=&nbsp;"darkgreen",&nbsp;fill&nbsp;=&nbsp;"white",aes(y=..density..),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;binwidth=0.02)&nbsp;+&nbsp;geom_rug()&nbsp;+
+&nbsp;&nbsp;&nbsp;geom_line(data=curve.wn,aes(x=x,y=y),colour="blue")&nbsp;+
+&nbsp;&nbsp;&nbsp;geom_line(data=curve.cauchy,aes(x=x,y=y),colour="red")
+R&#62;&nbsp;print(g)
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+<img src="graphics/plot-plot-ratiodistr.png" alt="graphics/plot-plot-ratiodistr.png" />
+
+<div style="text-align:center">Figure 4: Histogram of all protein ratios in
+  <tt>ibspiked_set1</tt>. A fit with a Gaussian and Cauchy
+  probability density function is shown in blue and red,
+  respectively.</div>
+<a id="fig:ratiodistr">
+</a>
+
+<div class="p"><!----></div>
+</div>Now, when supplying a <tt>ratiodistr</tt> parameter to
+<tt>estimateRatio</tt> and <tt>proteinRatios</tt>, sample and
+signal p-values are calculated, what we illustrate in the code below
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;rat.list&nbsp;&lt;-
+&nbsp;&nbsp;&nbsp;estimateRatio(ibspiked_set1,noise.model=noise.model,channel1="114",channel2="115",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;protein=reporterProteins(proteinGroup(ibspiked_set1)),combine=F,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ratiodistr=protein.ratiodistr.cauchy)
+R&#62;&nbsp;rat.list[rat.list[,"is.significant"]==1,]
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lratio&nbsp;&nbsp;variance&nbsp;n.spectra&nbsp;n.na1&nbsp;n.na2&nbsp;p.value.rat&nbsp;p.value.sample
+P13635&nbsp;&nbsp;0.2630&nbsp;0.0070344&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;240&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;8.559e-04&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0.02245
+Q61147&nbsp;-0.2946&nbsp;0.0009601&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;139&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;9.630e-22&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0.01973
+&lt;NA&#62;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA
+&lt;NA&#62;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA
+&lt;NA&#62;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;is.significant
+P13635&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1
+Q61147&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1
+&lt;NA&#62;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA
+&lt;NA&#62;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA
+&lt;NA&#62;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NA
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+     <a id="tth_sEc3.6"></a><h3>
+3.6&nbsp;&nbsp;Detection of proteins with no specific peptides</h3>
+It is well known that MS analysis only reveals the presence of
+so-called protein groups, defined as sets of proteins identified by
+the same set of peptides. The protein that contains all the peptides
+is the group reporter (there are possibly several group reporters) and
+if it has one specific peptide at least then its presence in the
+sample is certain. The status of the other proteins in the group is in
+general impossible to determine.  When quantitative information is
+available, there is a potential to elucidate the structure of part of
+the protein groups.
+
+<div class="p"><!----></div>
+In the example below, a subset <tt>IBSpectra</tt> object is created, 
+   containing only peptides shared between CERU_RAT and CERU_MOUSE, 
+   and those specific to CERU_RAT.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;##&nbsp;peptides&nbsp;shared&nbsp;between&nbsp;CERU_RAT&nbsp;and&nbsp;CERU_MOUSE&nbsp;have&nbsp;been&nbsp;computed&nbsp;before
+R&#62;&nbsp;pep.shared
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+&nbsp;[1]&nbsp;"AGLQAFFQVR"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"DNEEFLESNK"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"DTANLFPHK"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"EMGPTYADPVCLSK"&nbsp;
+&nbsp;[5]&nbsp;"ETFTYEWTVPK"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"GSLLADGR"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"KGSLLADGR"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"LYHSHVDAPK"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;[9]&nbsp;"NMATRPYSLHAHGVK"&nbsp;"RDTANLFPHK"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"VFFEQGATR"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;
+</pre> </span>
+  <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;##&nbsp;peptides&nbsp;specific&nbsp;to&nbsp;CERU_RAT
+R&#62;&nbsp;pep.rat&nbsp;&lt;-&nbsp;peptides(proteinGroup(ibspiked_set1),protein=ceru.rat,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;specificity="reporter-specific")
+R&#62;&nbsp;##&nbsp;create&nbsp;an&nbsp;IBSpectra&nbsp;object&nbsp;with&nbsp;only&nbsp;CERU_RAT&nbsp;and&nbsp;shared&nbsp;peptides
+R&#62;&nbsp;ib.subset&nbsp;&lt;-&nbsp;subsetIBSpectra(ibspiked_set1,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;peptide=c(pep.rat,pep.shared),direction="include")
+R&#62;&nbsp;##&nbsp;calculate&nbsp;shared&nbsp;ratios
+R&#62;&nbsp;sr&nbsp;&lt;-&nbsp;shared.ratios(ib.subset,noise.model,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;channel1="114",channel2="117",
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ratiodistr=protein.ratiodistr.cauchy)
+R&#62;&nbsp;sr
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reporter.protein&nbsp;protein2&nbsp;ratio1&nbsp;ratio1.var&nbsp;n.spectra.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ratio2
+lratio&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;P13635&nbsp;&nbsp;&nbsp;Q61147&nbsp;&nbsp;0.947&nbsp;&nbsp;&nbsp;&nbsp;0.01468&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;241&nbsp;-6.173e-06
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ratio2.var&nbsp;n.spectra.2
+lratio&nbsp;&nbsp;&nbsp;0.001756&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;275
+&nbsp;
+</pre> </span>
+  <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+
+<div style="text-align:center">
+<div class="p"><!----></div>
+<a id="tth_fIg5">
+</a>    <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;&nbsp;&nbsp;##&nbsp;plot&nbsp;significantly&nbsp;different&nbsp;protein&nbsp;groups&nbsp;where&nbsp;90%&nbsp;CI&nbsp;does&nbsp;not&nbsp;overlap
+R&#62;&nbsp;&nbsp;&nbsp;##&nbsp;CERU_MOUSE&nbsp;and&nbsp;CERU_RAT&nbsp;is&nbsp;detected,&nbsp;as&nbsp;expected.
+R&#62;&nbsp;&nbsp;&nbsp;shared.ratios.sign(sr,z.shared=1.282)
+&nbsp;
+</pre> </span>
+  <span style="color:#0000FF">
+<pre>
+&nbsp;&nbsp;&nbsp;&nbsp;reporter.protein&nbsp;protein2&nbsp;n.spectra.1&nbsp;n.spectra.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;proteins
+1.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;P13635&nbsp;&nbsp;&nbsp;Q61147&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;241&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;275&nbsp;P13635&nbsp;\nvs&nbsp;Q61147
+1.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;P13635&nbsp;&nbsp;&nbsp;Q61147&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;241&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;275&nbsp;P13635&nbsp;\nvs&nbsp;Q61147
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;g&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ratio&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var&nbsp;n.spectra&nbsp;id
+1.1&nbsp;reporter&nbsp;&nbsp;9.470e-01&nbsp;0.014683&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#62;&nbsp;10&nbsp;&nbsp;1
+1.2&nbsp;&nbsp;&nbsp;member&nbsp;-6.173e-06&nbsp;0.001756&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#62;&nbsp;10&nbsp;&nbsp;1
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+<img src="graphics/plot-023.png" alt="graphics/plot-023.png" />
+
+<div style="text-align:center">Figure 5: Peptides of spiked ceruplasmins have significantly different ratios 
+    between groups. Group <i>reporter</i> consists of peptides specific 
+        to <tt>CERU_RAT (P13635)</tt>, group <i>member</i> are peptides 
+        shared between <tt>CERU_RAT</tt> and <tt>CERU_MOUSE (Q61147)</tt>.</div>
+<a id="fig:sharedratios">
+</a>
+
+<div class="p"><!----></div>
+</div> <a id="tth_sEc4"></a><h2>
+4&nbsp;&nbsp;Report generation</h2>
+Analysis of reports can be analyzed with <tt>isobar</tt> by usage
+of the Rscript <tt>create_reports.R</tt>. This script reads command
+line options and a <tt>properties.R</tt> file to allow a complete
+analysis generating <span class="roman">L</span><sup><span class="roman">A</span></sup><span class="roman">T</span><sub><span class="roman">E</span></sub><span class="roman">X</span>(and thus PDF) and Excel reports containing
+all protein ratios and quality control.
+
+<div class="p"><!----></div>
+The <tt>properties.R</tt> file in the current folder overwrite the 
+settings set in the global file in the installation directory. Certain
+properties must be set (such as <tt>type</tt> and <tt>ibspectra</tt>), others specify the
+type of report to be generated. See appendix 
+<a href="#sec:properties">B</a> for the available settings.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;##&nbsp;execute&nbsp;to&nbsp;find&nbsp;the&nbsp;path&nbsp;and&nbsp;file&nbsp;location&nbsp;in&nbsp;your&nbsp;installation.
+R&#62;&nbsp;system.file("report",package="isobar")&nbsp;##&nbsp;path
+R&#62;&nbsp;list.files(system.file("report",package="isobar"))&nbsp;##&nbsp;files
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+
+<dl>
+ <dt><b>create_reports.R</b></dt>
+	<dd> R script which can be used to create QC and PDF reports
+    It initializes the environment, reads properties and calls <tt>Sweave</tt>
+    on QC and DA Sweave files. Additionally it generates a Excel data analysis report
+    by calling <tt>tab2xls.pl</tt>.</dd>
+ <dt><b>isobar-qc.Rnw</b></dt>
+	<dd> Sweave file with quality control plots.</dd>
+ <dt><b>isobar-analysis.Rnw</b></dt>
+	<dd> Sweave file for generating a data analysis report
+    with the list of all protein ratios and list of significantly different proteins.</dd>
+ <dt><b>properties.conf</b></dt>
+	<dd> Default configuration for <tt>create_reports.R</tt>.
+    It is parsed as R code.</dd>
+ <dt><b>report-utils.R</b></dt>
+	<dd> Helper R functions used in Sweave documents.</dd>
+ <dt><b>report-utils.tex</b></dt>
+	<dd> Helper <span class="roman">L</span><sup><span class="roman">A</span></sup><span class="roman">T</span><sub><span class="roman">E</span></sub><span class="roman">X</span> functions used in Sweave documents.</dd>
+</dl>
+
+<div class="p"><!----></div>
+ <a id="tth_sEc5"></a><h2>
+5&nbsp;&nbsp;File formats</h2>
+<a id="app:fileformats">
+</a>
+
+     <a id="tth_sEc5.1"></a><h3>
+5.1&nbsp;&nbsp;ID CSV file format</h3>
+The Perl parsers create ID CSV files - identification information for all
+matched spectra without quantitative information. You can create your own parser, 
+the resulting file should be tab-delimited and contain the following columns.
+Only bold columns are obligatory. The information is redundant - that means if
+a peptide may stem from two different proteins the information of the identification
+is repeated.
+
+<div class="p"><!----></div>
+
+<table>
+<tr><td align="right"><b>accession</b> </td><td align="left">Protein AC </td></tr>
+<tr><td align="right"><b>peptide</b> </td><td align="left">Peptide sequence</td></tr>
+<tr><td align="right">modif </td><td align="left">Peptide modification string</td></tr>
+<tr><td align="right">charge </td><td align="left">Charge state</td></tr>
+<tr><td align="right">theo.mass </td><td align="left">Theoretical peptide mass</td></tr>
+<tr><td align="right">exp.mass </td><td align="left">Experimentally observed mass</td></tr>
+<tr><td align="right">parent.intens </td><td align="left">Parent intensity</td></tr>
+<tr><td align="right">retention.time </td><td align="left">Retention time</td></tr>
+<tr><td align="right"><b>spectrum</b> </td><td align="left">Spectrum identifier</td></tr>
+<tr><td align="right">search.engine </td><td align="left">Protein search engine and score</td></tr></table>
+
+
+<div class="p"><!----></div>
+     <a id="tth_sEc5.2"></a><h3>
+5.2&nbsp;&nbsp;IBSpectra CSV file format</h3>
+IBSpectra file format has the same columns as the ID CSV format and additionally 
+columns containing the quantitation information, namely
+<tt>X<i>tagname</i>_mass</tt> and <tt>X<i>tagname</i>_ions</tt>,
+for mass and intensity of each tag <i>tagname</i>. Below an example of the 
+further columns for an <tt>iTRAQ 4plex</tt> IBSpectra.
+
+<div class="p"><!----></div>
+
+<table>
+<tr><td align="right"><b>X114_mass</b> </td><td align="left">reporter ion mass</td></tr>
+<tr><td align="right"><b>X115_mass</b> </td><td align="left">reporter ion mass</td></tr>
+<tr><td align="right"><b>X116_mass</b> </td><td align="left">reporter ion mass</td></tr>
+<tr><td align="right"><b>X117_mass</b> </td><td align="left">reporter ion mass</td></tr>
+<tr><td align="right"><b>X114_ions</b> </td><td align="left">reporter ion intensity</td></tr>
+<tr><td align="right"><b>X115_ions</b> </td><td align="left">reporter ion intensity</td></tr>
+<tr><td align="right"><b>X116_ions</b> </td><td align="left">reporter ion intensity</td></tr>
+<tr><td align="right"><b>X117_ions</b> </td><td align="left">reporter ion intensity</td></tr></table>
+
+
+<div class="p"><!----></div>
+ <a id="tth_sEc6"></a><h2>
+6&nbsp;&nbsp;<tt>properties.R</tt> for report generation</h2>
+<a id="sec:properties">
+</a>
+
+
+
+
+
+
+
+
+<div class="p"><!----></div>
+ <a id="tth_sEc7"></a><h2>
+7&nbsp;&nbsp;Dependencies</h2><a id="sec:dependencies">
+</a>
+
+     <a id="tth_sEc7.1"></a><h3>
+7.1&nbsp;&nbsp;<span class="roman">L</span><sup><span class="roman">A</span></sup><span class="roman">T</span><sub><span class="roman">E</span></sub><span class="roman">X</span> and PGF/TikZ</h3>
+<span class="roman">L</span><sup><span class="roman">A</span></sup><span class="roman">T</span><sub><span class="roman">E</span></sub><span class="roman">X</span> is a high-quality typesetting system; it includes features designed for the production of technical and scientific documentation. It is available as free software<a href="#tthFtNtAAC" id="tthFrefAAC"><sup>2</sup></a>. PGF is a <span class="roman">T</span><sub><span class="roman">E</span></sub><span class="roman">X</span> macro package for generating graphics It comes with a user-friedly syntax layer called TikZ<a href="#tthFtNtAAD" id="tthFrefAAD"><sup>3</sup></a>.
+
+<div class="p"><!----></div>
+<span class="roman">L</span><sup><span class="roman">A</span></sup><span class="roman">T</span><sub><span class="roman">E</span></sub><span class="roman">X</span> is used for creating PDF analysis reports, with the PGF package creating the graphics. Go to <a href="http://www.latex-project.org"><tt>http://www.latex-project.org</tt></a> to get information on how to download and install a <span class="roman">L</span><sup><span class="roman">A</span></sup><span class="roman">T</span><sub><span class="roman">E</span></sub><span class="roman">X</span> system and packages.
+
+<div class="p"><!----></div>
+     <a id="tth_sEc7.2"></a><h3>
+7.2&nbsp;&nbsp;Perl</h3><a id="app:installing-perl">
+</a>
+Perl is a high-level, general-purpose, interpreted, dynamic programming language. Perl is required for two tasks:
+
+<ul>
+<li> Conversion of Pidres XML and Mascot DAT files to ID CSV format;
+<div class="p"><!----></div>
+</li>
+
+<li> Creation of Microsoft Excel format data analysis report.
+<div class="p"><!----></div>
+</li>
+</ul>
+Go to <a href="http://www.perl.org"><tt>http://www.perl.org</tt></a> to download and get help on the installation of Perl on your Operating System.
+For file format conversion, perl module <tt>Statistics::Lite</tt> is required. For Excel export <tt>Spreadsheet::WriteExcel</tt>. All Perl scripts are in the subdirectory <tt>pl</tt> of the isobar package installation.
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;##&nbsp;execute&nbsp;to&nbsp;find&nbsp;the&nbsp;path&nbsp;and&nbsp;file&nbsp;location&nbsp;in&nbsp;your&nbsp;installation.
+R&#62;&nbsp;system.file("pl",package="isobar")&nbsp;##&nbsp;path
+R&#62;&nbsp;list.files(system.file("pl",package="isobar"))&nbsp;##&nbsp;files
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+<tt>mascotParser2.pl</tt> and <tt>pidresParser2.pl</tt> convert from respective protein search outputfiles to a XML file format, which can be converted into a CSV file readable by <i>isobar</i> by using <tt>psx2tab2.pl</tt>.
+
+<div class="p"><!----></div>
+<tt>mascotParser2.pl</tt> coverts from Mascot format, and requires the file <tt>modifconv.csv</tt> as a definition of modification names. <tt>pidresParser2.pl</tt> converts from Phenyx output and requires the file <tt>parsersConfig.xml</tt>. <tt>tab2xls.pl</tt> converts csv file to different sheets of an Excel spreadsheet.
+
+<div class="p"><!----></div>
+<a id="app:itraqmascotparser-help">
+</a>   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;##&nbsp;execute&nbsp;on&nbsp;your&nbsp;system
+R&#62;&nbsp;system(paste("perl",system.file("pl","mascotParser2.pl",package="isobar"),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"--help"))
+R&#62;&nbsp;print(paste("perl",system.file("pl","pidresParser2.pl",package="isobar"),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"--help"))
+&nbsp;
+</pre> </span>
+
+<div class="p"><!----></div>
+ <a id="tth_sEc8"></a><h2>
+8&nbsp;&nbsp;Session Information</h2>
+
+<div class="p"><!----></div>
+The version number of R and packages loaded for generating the vignette were:
+
+<div class="p"><!----></div>
+   <span style="color:#FF0000">
+<pre>
+R&#62;&nbsp;&nbsp;&nbsp;toLatex(sessionInfo())
+&nbsp;
+</pre> </span>
+
+<ul>
+<li> R version 2.15.2 (2012-10-26), <tt>x86_64-unknown-linux-gnu</tt>
+<div class="p"><!----></div>
+</li>
+
+<li> Locale: <tt>C</tt>
+<div class="p"><!----></div>
+</li>
+
+<li> Base packages: base, datasets, grDevices, graphics, methods,
+    stats, utils
+<div class="p"><!----></div>
+</li>
+
+<li> Other packages: Biobase&nbsp;2.16.0, BiocGenerics&nbsp;0.2.0,
+    SweaveListingUtils&nbsp;0.5.5, distr&nbsp;2.3.3, ggplot2&nbsp;0.9.2.1,
+    isobar&nbsp;1.5.0, plyr&nbsp;1.7.1, sfsmisc&nbsp;1.0-23, startupmsg&nbsp;0.7.2
+<div class="p"><!----></div>
+</li>
+
+<li> Loaded via a namespace (and not attached): MASS&nbsp;7.3-22,
+    RColorBrewer&nbsp;1.0-5, colorspace&nbsp;1.2-0, dichromat&nbsp;1.2-4,
+    digest&nbsp;0.5.2, grid&nbsp;2.15.2, gtable&nbsp;0.1.1, labeling&nbsp;0.1, memoise&nbsp;0.1,
+    munsell&nbsp;0.4, proto&nbsp;0.3-9.2, reshape2&nbsp;1.2.1, scales&nbsp;0.2.2,
+    stringr&nbsp;0.6.1, tools&nbsp;2.15.2
+<div class="p"><!----></div>
+</li>
+</ul> 
+
+
+<div class="p"><!----></div>
+<hr /><h3>Footnotes:</h3>
+
+<div class="p"><!----></div>
+<a id="tthFtNtAAB"></a><a href="#tthFrefAAB"><sup>1</sup></a>That means these
+      proteins have a subset of the peptides of the reporter
+<div class="p"><!----></div>
+<a id="tthFtNtAAC"></a><a href="#tthFrefAAC"><sup>2</sup></a><a href="http://www.latex-project.org"><tt>http://www.latex-project.org</tt></a>
+<div class="p"><!----></div>
+<a id="tthFtNtAAD"></a><a href="#tthFrefAAD"><sup>3</sup></a><a href="http://sourceforge.net/projects/pgf"><tt>http://sourceforge.net/projects/pgf</tt></a></div>
+
+<br/>
+<small>Copyright &copy; 2012 Florian Breitwieser, <a href="http://www.cemm.oeaw.ac.at">Ce-M-M-</a>. Last update on 2013-01-04.</small>
+
+</body>
+
+</html>
