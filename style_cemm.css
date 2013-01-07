@@ -1,3 +1,8 @@
+h1              { font-size: 1.6em; margin: .67em 0 }
+h2              { font-size: 1.2em; margin: .75em 0 }
+h1, h2, h3, h4,
+h5, h6          { font-weight: bolder }
+
 a {
   /*color: blue;*/
   color: #137279;

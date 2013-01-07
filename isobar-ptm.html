@@ -25,6 +25,7 @@ document.getElementById("s3").setAttribute("class", "selected section");
 
 <div class="body">
 
+<small align='right'>generated from isobar-ptm vignette. <a href='isobar-ptm.pdf'>pdf version</a></small>
 <style type='text/css'>.body{font-size:12px;}</style>
 
 
@@ -41,7 +42,7 @@ document.getElementById("s3").setAttribute("class", "selected section");
 
 
 
-<title>\isobar{} for quantification of PTM datasets</title>
+<title>{isobar} for quantification of PTM datasets</title>
     
 <h1 align="center"><em>isobar</em> for quantification of PTM datasets </h1>
 
@@ -49,7 +50,7 @@ document.getElementById("s3").setAttribute("class", "selected section");
 
 <div class="p"><!----></div>
   
-<h1>Contents </h1><a href="#tth_sEc1"
+<a href="#tth_sEc1"
 >1&nbsp; Introduction</a><br />
 <a href="#tth_sEc2"
 >2&nbsp; Modification Site Localization</a><br />
@@ -66,7 +67,7 @@ document.getElementById("s3").setAttribute("class", "selected section");
 <div class="p"><!----></div>
  <a id="tth_sEc1"></a><h2>
 1&nbsp;&nbsp;Introduction</h2>
-<em>isobar</em> [<a href="#Breitwieser_Colinge2011-JPR" id="CITEBreitwieser_Colinge2011-JPR">1</a>] version 2 includes
+<tt>isobar</tt> [<a href="#Breitwieser_Colinge2011-JPR" id="CITEBreitwieser_Colinge2011-JPR">1</a>] version 2 includes
 modules to facilitate PTM quantification. This vignette describes its
 parts, and how to use it to generate quantification reports.
 
@@ -78,7 +79,7 @@ R&#62;&nbsp;&nbsp;&nbsp;library(isobar)&nbsp;##&nbsp;load&nbsp;the&nbsp;isobar&n
 </pre> </span>
 
 <div class="p"><!----></div>
-Using <em>isobar</em>, automatic report generation is straight-forward
+Using <tt>isobar</tt>, automatic report generation is straight-forward
 given proper input files using the script <tt>report/create_reports.R</tt>.
 When called, it parses the globabl properties file <tt>report/properties.R</tt>
 and then the <tt>properties.R</tt> in the current directory. Below is a small 
@@ -107,7 +108,7 @@ Reports will be generated calling <tt>path_to_isobar/report/create_reports.R -pe
 <div class="p"><!----></div>
  <a id="tth_sEc2"></a><h2>
 2&nbsp;&nbsp;Modification Site Localization</h2>
-<em>isobar</em> supports PhosphoRS [<a href="#Taus_Mechtler2011-JPR" id="CITETaus_Mechtler2011-JPR">5</a>] and Delta
+<tt>isobar</tt> supports PhosphoRS [<a href="#Taus_Mechtler2011-JPR" id="CITETaus_Mechtler2011-JPR">5</a>] and Delta
 Score [<a href="#Savitski_Kuster2011-MCP" id="CITESavitski_Kuster2011-MCP">4</a>] for modification site localization.
 
 <div class="p"><!----></div>
@@ -118,7 +119,7 @@ The standalone Java version of PhosphoRS can be downloaded from
 a command line interface to a script which rescores localizations of
 the modification for each peptide-spectrum match. It uses  <span style="font-size:x-small">XML</span>
 files for input and output, which can be generated and parsed by
-<em>isobar</em>. 
+<tt>isobar</tt>. 
 
 <div class="p"><!----></div>
    <span style="color:#FF0000">
@@ -427,7 +428,7 @@ annotate thousands of residues of post-translationally modified
 proteins. 
 
 <div class="p"><!----></div>
-<em>isobar</em> provides functions to gather their information on identified
+<tt>isobar</tt> provides functions to gather their information on identified
 proteins.
 
 <div class="p"><!----></div>

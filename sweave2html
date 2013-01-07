@@ -10,6 +10,7 @@ done
 
 SECTION_ID=$2
 sed -e "s/###ID###/$SECTION_ID/" templates/template_header.html > $1.html
+echo "<small align='right'>generated from $1 vignette. <a href='$1.pdf'>pdf version</a></small>" >> $1.html
 echo "<style type='text/css'>.body{font-size:12px;}</style>" >> $1.html
 
 sed -e 's/\\begin{Sinput}/ { \\color{red} \\begin{verbatim}/
@@ -25,7 +26,11 @@ sed -e 's/\\begin{Sinput}/ { \\color{red} \\begin{verbatim}/
         s/\\hrule/\n\\hrule\n\n/
         s/\\vbox//
         s/\\begin{spacing}{.*}/\\begin{spacing}{}/
-        s/\\vspace{[^}]*}//' $1.tex | tth -a -u -e2 -L$1 -r | sed -e 's/src="graphics\/fig_maplot_normalize.png"/src="graphics\/fig_maplot_normalize.png" width="80%"/' | sed -e 's/src="graphics\/fig_maplot_noisemodel.png"/src="graphics\/fig_maplot_noisemodel.png" width="80%"/' >> $1.html
+        s/\\vspace{[^}]*}//' $1.tex | tth -a -u -e2 -L$1 -r \
+          | sed -e 's#<h1>Contents </h1>##' \
+          | sed -e 's/src="graphics\/fig_maplot_normalize.png"/src="graphics\/fig_maplot_normalize.png" width="80%"/' \
+          | sed -e 's/src="graphics\/fig_maplot_noisemodel.png"/src="graphics\/fig_maplot_noisemodel.png" width="80%"/' \
+          >> $1.html
 
 
 sed -e "s/###FOOTER###/Last update on `date +%Y-%m-%d`./" templates/template_footer.html >>$1.html
